@@ -45,8 +45,8 @@ function Test-PythonVersion {
             $major = [int]$matches[1]
             $minor = [int]$matches[2]
             
-            if ($major -lt 3 -or ($major -eq 3 -and $minor -lt 9)) {
-                throw "Python 3.9+ required. Current: $pythonVersion"
+            if ($major -lt 3 -or ($major -eq 3 -and $minor -lt 10)) {
+                throw "Python 3.10+ required. Current: $pythonVersion"
             }
             
             Write-ColorOutput "✓ $pythonVersion detected" "Green"
@@ -55,7 +55,7 @@ function Test-PythonVersion {
         }
     }
     catch {
-        Write-ColorOutput "Error: Python 3.9+ is required" "Red"
+        Write-ColorOutput "Error: Python 3.10+ is required" "Red"
         Write-ColorOutput "Please install from https://python.org/" "Red"
         Write-ColorOutput "Make sure to add Python to your PATH during installation" "Yellow"
         exit 1

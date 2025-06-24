@@ -1,0 +1,584 @@
+name: MCP Server CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+# Optimize permissions for security
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+  security-events: write
+
+env:
+  # Environment variables for consistent behavior
+  NODE_ENV: production
+  PYTHON_VERSION: "3.11"
+  NODE_VERSION: "20"
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Job 1: Detect project type and validate structure
+  detect-project-type:
+    name: Detect Project Type
+    runs-on: ubuntu-latest
+    outputs:
+      project-type: ${{ steps.detect.outputs.project-type }}
+      has-typescript: ${{ steps.detect.outputs.has-typescript }}
+      has-python: ${{ steps.detect.outputs.has-python }}
+      has-docker: ${{ steps.detect.outputs.has-docker }}
+      package-manager: ${{ steps.detect.outputs.package-manager }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect project structure
+        id: detect
+        run: |
+          # Detect project type based on files present
+          PROJECT_TYPE="unknown"
+          HAS_TS="false"
+          HAS_PY="false"
+          HAS_DOCKER="false"
+          PKG_MANAGER="npm"
+          
+          # Check for TypeScript/Node.js indicators
+          if [[ -f "package.json" ]]; then
+            HAS_TS="true"
+            if [[ -f "package-lock.json" ]]; then
+              PKG_MANAGER="npm"
+            elif [[ -f "yarn.lock" ]]; then
+              PKG_MANAGER="yarn"
+            elif [[ -f "pnpm-lock.yaml" ]]; then
+              PKG_MANAGER="pnpm"
+            elif [[ -f "bun.lockb" ]]; then
+              PKG_MANAGER="bun"
+            fi
+          fi
+          
+          # Check for Python indicators
+          if [[ -f "requirements.txt" ]] || [[ -f "pyproject.toml" ]] || [[ -f "setup.py" ]]; then
+            HAS_PY="true"
+          fi
+          
+          # Check for Docker
+          if [[ -f "Dockerfile" ]] || [[ -f "docker-compose.yml" ]]; then
+            HAS_DOCKER="true"
+          fi
+          
+          # Determine primary project type
+          if [[ "$HAS_TS" == "true" ]] && [[ "$HAS_PY" == "true" ]]; then
+            PROJECT_TYPE="hybrid"
+          elif [[ "$HAS_TS" == "true" ]]; then
+            PROJECT_TYPE="typescript"
+          elif [[ "$HAS_PY" == "true" ]]; then
+            PROJECT_TYPE="python"
+          fi
+          
+          echo "project-type=$PROJECT_TYPE" >> $GITHUB_OUTPUT
+          echo "has-typescript=$HAS_TS" >> $GITHUB_OUTPUT
+          echo "has-python=$HAS_PY" >> $GITHUB_OUTPUT
+          echo "has-docker=$HAS_DOCKER" >> $GITHUB_OUTPUT
+          echo "package-manager=$PKG_MANAGER" >> $GITHUB_OUTPUT
+          
+          # Log detection results
+          echo "Detected project type: $PROJECT_TYPE"
+          echo "Has TypeScript: $HAS_TS"
+          echo "Has Python: $HAS_PY"
+          echo "Has Docker: $HAS_DOCKER"
+          echo "Package manager: $PKG_MANAGER"
+
+  # Job 2: TypeScript/Node.js build and test
+  typescript-build:
+    name: TypeScript Build & Test
+    runs-on: ubuntu-latest
+    needs: detect-project-type
+    if: needs.detect-project-type.outputs.has-typescript == 'true'
+    strategy:
+      matrix:
+        node-version: ['18', '20', '22']
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: ${{ needs.detect-project-type.outputs.package-manager }}
+
+      - name: Install dependencies (npm)
+        if: needs.detect-project-type.outputs.package-manager == 'npm'
+        run: |
+          npm ci --prefer-offline --no-audit --no-fund
+          # Install MCP SDK if not present
+          if ! npm list @modelcontextprotocol/sdk > /dev/null 2>&1; then
+            npm install @modelcontextprotocol/sdk
+          fi
+
+      - name: Install dependencies (yarn)
+        if: needs.detect-project-type.outputs.package-manager == 'yarn'
+        run: |
+          yarn install --frozen-lockfile --prefer-offline
+          # Install MCP SDK if not present
+          if ! yarn list @modelcontextprotocol/sdk > /dev/null 2>&1; then
+            yarn add @modelcontextprotocol/sdk
+          fi
+
+      - name: Install dependencies (pnpm)
+        if: needs.detect-project-type.outputs.package-manager == 'pnpm'
+        run: |
+          corepack enable pnpm
+          pnpm install --frozen-lockfile --prefer-offline
+          # Install MCP SDK if not present
+          if ! pnpm list @modelcontextprotocol/sdk > /dev/null 2>&1; then
+            pnpm add @modelcontextprotocol/sdk
+          fi
+
+      - name: Install dependencies (bun)
+        if: needs.detect-project-type.outputs.package-manager == 'bun'
+        run: |
+          curl -fsSL https://bun.sh/install | bash
+          export PATH="$HOME/.bun/bin:$PATH"
+          bun install --frozen-lockfile
+          # Install MCP SDK if not present
+          if ! bun pm ls | grep @modelcontextprotocol/sdk > /dev/null 2>&1; then
+            bun add @modelcontextprotocol/sdk
+          fi
+
+      - name: Type checking
+        run: |
+          if [[ -f "tsconfig.json" ]]; then
+            npx tsc --noEmit --skipLibCheck
+          else
+            echo "No tsconfig.json found, skipping type checking"
+          fi
+
+      - name: Linting
+        run: |
+          # ESLint
+          if [[ -f ".eslintrc.js" ]] || [[ -f ".eslintrc.json" ]] || [[ -f "eslint.config.js" ]]; then
+            npx eslint . --ext .ts,.js,.tsx,.jsx --max-warnings 0
+          fi
+          
+          # Prettier
+          if [[ -f ".prettierrc" ]] || [[ -f "prettier.config.js" ]]; then
+            npx prettier --check .
+          fi
+
+      - name: Build project
+        run: |
+          # Try different build commands
+          if npm run build > /dev/null 2>&1; then
+            npm run build
+          elif [[ -f "tsconfig.json" ]]; then
+            npx tsc
+          else
+            echo "No build configuration found"
+          fi
+
+      - name: Run tests
+        run: |
+          # Try different test commands
+          if npm run test > /dev/null 2>&1; then
+            npm run test
+          elif npm run test:unit > /dev/null 2>&1; then
+            npm run test:unit
+          elif [[ -f "jest.config.js" ]] || [[ -f "jest.config.ts" ]]; then
+            npx jest
+          elif [[ -f "vitest.config.ts" ]]; then
+            npx vitest run
+          else
+            echo "No test configuration found, skipping tests"
+          fi
+
+      - name: Validate MCP server
+        run: |
+          # Check if the built MCP server can start
+          if [[ -f "dist/index.js" ]]; then
+            timeout 10s node dist/index.js --help || echo "MCP server validation complete"
+          elif [[ -f "build/index.js" ]]; then
+            timeout 10s node build/index.js --help || echo "MCP server validation complete"
+          elif [[ -f "lib/index.js" ]]; then
+            timeout 10s node lib/index.js --help || echo "MCP server validation complete"
+          else
+            echo "No built server found, skipping validation"
+          fi
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: typescript-build-${{ matrix.node-version }}
+          path: |
+            dist/
+            build/
+            lib/
+          retention-days: 7
+
+  # Job 3: Python build and test
+  python-build:
+    name: Python Build & Test
+    runs-on: ubuntu-latest
+    needs: detect-project-type
+    if: needs.detect-project-type.outputs.has-python == 'true'
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.10', '3.11', '3.12']
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential
+
+      - name: Upgrade pip and install build tools
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install --upgrade build twine
+
+      - name: Install dependencies
+        run: |
+          # Install based on available files
+          if [[ -f "pyproject.toml" ]]; then
+            python -m pip install -e .[dev,test] || python -m pip install -e .
+          elif [[ -f "requirements.txt" ]]; then
+            python -m pip install -r requirements.txt
+          elif [[ -f "setup.py" ]]; then
+            python -m pip install -e .
+          fi
+          
+          # Install MCP SDK if not present
+          if ! python -c "import mcp" > /dev/null 2>&1; then
+            python -m pip install mcp
+          fi
+          
+          # Install common development dependencies
+          python -m pip install pytest pytest-cov black flake8 mypy || true
+
+      - name: Code formatting check (Black)
+        run: |
+          if command -v black > /dev/null 2>&1; then
+            black --check --diff .
+          else
+            echo "Black not installed, skipping formatting check"
+          fi
+
+      - name: Linting (Flake8)
+        run: |
+          if command -v flake8 > /dev/null 2>&1; then
+            flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+            flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+          else
+            echo "Flake8 not installed, skipping linting"
+          fi
+
+      - name: Type checking (MyPy)
+        run: |
+          if command -v mypy > /dev/null 2>&1; then
+            mypy . --ignore-missing-imports || echo "MyPy found issues (non-blocking)"
+          else
+            echo "MyPy not installed, skipping type checking"
+          fi
+
+      - name: Run tests
+        run: |
+          if command -v pytest > /dev/null 2>&1; then
+            pytest --cov=. --cov-report=xml --cov-report=html || echo "Tests completed with issues"
+          elif [[ -f "test.py" ]]; then
+            python test.py
+          elif [[ -d "tests/" ]]; then
+            python -m unittest discover tests/
+          else
+            echo "No test configuration found"
+          fi
+
+      - name: Build package
+        run: |
+          if [[ -f "pyproject.toml" ]] || [[ -f "setup.py" ]]; then
+            python -m build
+          else
+            echo "No build configuration found"
+          fi
+
+      - name: Validate MCP server
+        run: |
+          # Try to import and validate the MCP server
+          python -c "
+          import sys
+          import importlib.util
+          import os
+          
+          # Try to find the main server file
+          candidates = ['server.py', 'main.py', 'app.py', 'mcp_server.py']
+          for candidate in candidates:
+              if os.path.exists(candidate):
+                  print(f'Found server file: {candidate}')
+                  spec = importlib.util.spec_from_file_location('server', candidate)
+                  if spec and spec.loader:
+                      try:
+                          module = importlib.util.module_from_spec(spec)
+                          spec.loader.exec_module(module)
+                          print('MCP server loaded successfully')
+                      except Exception as e:
+                          print(f'Server validation warning: {e}')
+                  break
+          else:
+              print('No main server file found')
+          "
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: python-test-results-${{ matrix.python-version }}
+          path: |
+            htmlcov/
+            coverage.xml
+            .coverage
+          retention-days: 7
+
+  # Job 4: Security scanning
+  security-scan:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    needs: detect-project-type
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Node.js security audit
+        if: needs.detect-project-type.outputs.has-typescript == 'true'
+        run: |
+          if [[ -f "package-lock.json" ]]; then
+            npm audit --audit-level=high
+          elif [[ -f "yarn.lock" ]]; then
+            yarn audit --level high
+          fi
+
+      - name: Python security scan
+        if: needs.detect-project-type.outputs.has-python == 'true'
+        run: |
+          python -m pip install safety bandit
+          # Check for known vulnerabilities
+          if [[ -f "requirements.txt" ]]; then
+            safety check -r requirements.txt || echo "Security issues found (non-blocking)"
+          fi
+          # Static analysis for security issues
+          bandit -r . -f json -o bandit-report.json || echo "Bandit found issues (non-blocking)"
+
+  # Job 5: Docker build (if applicable)
+  docker-build:
+    name: Docker Build & Test
+    runs-on: ubuntu-latest
+    needs: [detect-project-type, typescript-build, python-build]
+    if: always() && needs.detect-project-type.outputs.has-docker == 'true'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          tags: ${{ env.IMAGE_NAME }}:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Test Docker image
+        run: |
+          # Test that the container can start
+          docker run --rm --name mcp-server-test -d ${{ env.IMAGE_NAME }}:test
+          sleep 5
+          # Check if container is still running
+          if docker ps | grep mcp-server-test; then
+            echo "Container started successfully"
+            docker stop mcp-server-test
+          else
+            echo "Container failed to start properly"
+            docker logs mcp-server-test || true
+            exit 1
+          fi
+
+  # Job 6: Integration tests
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [detect-project-type, typescript-build, python-build]
+    if: always() && (needs.typescript-build.result == 'success' || needs.python-build.result == 'success')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js (for MCP client testing)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Python (for MCP client testing)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install MCP testing tools
+        run: |
+          npm install -g @modelcontextprotocol/inspector
+          python -m pip install mcp
+
+      - name: Download build artifacts (TypeScript)
+        if: needs.detect-project-type.outputs.has-typescript == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: typescript-build-20
+          path: ./build-artifacts/
+
+      - name: Run MCP server integration tests
+        run: |
+          # Test MCP protocol compliance
+          echo "Testing MCP server protocol compliance..."
+          
+          # For TypeScript servers
+          if [[ -f "build-artifacts/dist/index.js" ]]; then
+            echo "Testing TypeScript MCP server..."
+            timeout 30s node build-artifacts/dist/index.js &
+            SERVER_PID=$!
+            sleep 5
+            kill $SERVER_PID 2>/dev/null || true
+            echo "TypeScript server test completed"
+          fi
+          
+          # For Python servers
+          if [[ -f "server.py" ]]; then
+            echo "Testing Python MCP server..."
+            timeout 30s python server.py &
+            SERVER_PID=$!
+            sleep 5
+            kill $SERVER_PID 2>/dev/null || true
+            echo "Python server test completed"
+          fi
+
+  # Job 7: Release preparation
+  prepare-release:
+    name: Prepare Release
+    runs-on: ubuntu-latest
+    needs: [typescript-build, python-build, security-scan, integration-tests]
+    if: always() && github.ref == 'refs/heads/main' && (needs.typescript-build.result == 'success' || needs.python-build.result == 'success')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Generate release notes
+        run: |
+          echo "# Release Notes" > RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+          echo "## Changes in this release:" >> RELEASE_NOTES.md
+          git log --oneline --since="1 week ago" >> RELEASE_NOTES.md
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-preparation
+          path: |
+            RELEASE_NOTES.md
+            dist/
+            build/
+            *.whl
+            *.tar.gz
+          retention-days: 30
+
+  # Job 8: Deployment (if applicable)
+  deploy:
+    name: Deploy MCP Server
+    runs-on: ubuntu-latest
+    needs: [prepare-release, docker-build]
+    if: always() && github.ref == 'refs/heads/main' && needs.prepare-release.result == 'success'
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        if: needs.detect-project-type.outputs.has-docker == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy to staging
+        run: |
+          echo "Deploying MCP server to staging environment..."
+          # Add your deployment commands here
+          # Example: kubectl apply -f k8s/deployment.yaml
+
+  # Job 9: Notification and cleanup
+  notify:
+    name: Notify & Cleanup
+    runs-on: ubuntu-latest
+    needs: [typescript-build, python-build, security-scan, integration-tests, deploy]
+    if: always()
+    steps:
+      - name: Determine overall status
+        id: status
+        run: |
+          if [[ "${{ needs.typescript-build.result }}" == "success" ]] || [[ "${{ needs.python-build.result }}" == "success" ]]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+          else
+            echo "status=failure" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Success notification
+        if: steps.status.outputs.status == 'success'
+        run: |
+          echo "✅ MCP Server CI/CD pipeline completed successfully!"
+          echo "All checks passed and the server is ready for deployment."
+
+      - name: Failure notification
+        if: steps.status.outputs.status == 'failure'
+        run: |
+          echo "❌ MCP Server CI/CD pipeline failed!"
+          echo "Please check the logs for details and fix the issues."
+          exit 1

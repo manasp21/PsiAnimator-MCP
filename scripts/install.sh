@@ -16,7 +16,7 @@ echo ""
 check_python_version() {
     if ! command -v python3 &> /dev/null; then
         echo -e "${RED}Error: Python 3 is not installed${NC}"
-        echo "Please install Python 3.9+ from https://python.org/"
+        echo "Please install Python 3.10+ from https://python.org/"
         exit 1
     fi
     
@@ -24,8 +24,8 @@ check_python_version() {
     PYTHON_MAJOR=$(echo $PYTHON_VERSION | cut -d'.' -f1)
     PYTHON_MINOR=$(echo $PYTHON_VERSION | cut -d'.' -f2)
     
-    if [ "$PYTHON_MAJOR" -lt 3 ] || ([ "$PYTHON_MAJOR" -eq 3 ] && [ "$PYTHON_MINOR" -lt 9 ]); then
-        echo -e "${RED}Error: Python 3.9+ required${NC}"
+    if [ "$PYTHON_MAJOR" -lt 3 ] || ([ "$PYTHON_MAJOR" -eq 3 ] && [ "$PYTHON_MINOR" -lt 10 ]); then
+        echo -e "${RED}Error: Python 3.10+ required${NC}"
         echo "Current version: Python $PYTHON_VERSION"
         echo "Please upgrade Python from https://python.org/"
         exit 1

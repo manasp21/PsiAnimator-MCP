@@ -11,7 +11,7 @@ name = "psianimator-mcp"
 dynamic = ["version"]
 description = "Quantum Physics Simulation and Animation Server using MCP, QuTip, and Manim"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = {text = "MIT"}
 authors = [
     {name = "PsiAnimator Development Team", email = "contact@psianimator.dev"}
@@ -43,10 +43,10 @@ classifiers = [
     "Topic :: Education",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Operating System :: OS Independent",
     "Environment :: Console",
     "Framework :: AsyncIO"
@@ -185,7 +185,7 @@ line_length = 88
 known_first_party = ["psianimator_mcp"]
 
 [tool.mypy]
-python_version = "3.9"
+python_version = "3.10"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true

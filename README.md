@@ -41,7 +41,7 @@ cd PsiAnimator-MCP
 
 ### Prerequisites
 
-- Python ≥ 3.9
+- Python ≥ 3.10
 - Git (for development installation)
 - LaTeX (optional, for advanced Manim features)
 - FFmpeg (optional, for video generation)
