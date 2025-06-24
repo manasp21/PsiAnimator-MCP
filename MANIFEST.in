@@ -1,0 +1,47 @@
+# Include essential project files
+include README.md
+include LICENSE
+include CONTRIBUTING.md
+include pyproject.toml
+
+# Include configuration files
+recursive-include config *.json
+recursive-include config *.yaml
+recursive-include config *.yml
+
+# Include installation scripts
+recursive-include scripts *.sh
+recursive-include scripts *.ps1
+recursive-include scripts *.py
+
+# Include documentation
+recursive-include docs *.md
+recursive-include docs *.rst
+recursive-include docs *.txt
+
+# Include examples
+recursive-include examples *.py
+recursive-include examples *.ipynb
+recursive-include examples *.md
+
+# Include tests (for source distributions)
+recursive-include tests *.py
+
+# Include package data
+recursive-include src/psianimator_mcp *.py
+recursive-include src/psianimator_mcp *.pyi
+recursive-include src/psianimator_mcp py.typed
+recursive-include src/psianimator_mcp *.json
+recursive-include src/psianimator_mcp *.yaml
+recursive-include src/psianimator_mcp *.yml
+
+# Exclude unnecessary files
+exclude .gitignore
+exclude .pre-commit-config.yaml
+exclude MCP_Guidelines
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
+recursive-exclude * *.pyc
+recursive-exclude * *.pyo
+recursive-exclude * .DS_Store
+recursive-exclude * Thumbs.db

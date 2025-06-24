@@ -1,10 +1,14 @@
 [build-system]
-requires = ["setuptools>=64", "wheel"]
+requires = [
+    "setuptools>=64", 
+    "wheel",
+    "setuptools-scm>=8.0"
+]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "psianimator-mcp"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Quantum Physics Simulation and Animation Server using MCP, QuTip, and Manim"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -12,27 +16,40 @@ license = {text = "MIT"}
 authors = [
     {name = "PsiAnimator Development Team", email = "contact@psianimator.dev"}
 ]
+maintainers = [
+    {name = "PsiAnimator Development Team", email = "contact@psianimator.dev"}
+]
 keywords = [
-    "quantum physics", 
+    "quantum-physics", 
     "simulation", 
     "animation", 
     "manim", 
     "qutip", 
     "mcp",
     "visualization",
-    "quantum computing"
+    "quantum-computing",
+    "model-context-protocol",
+    "claude",
+    "ai"
 ]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
+    "Intended Audience :: Education",
+    "Intended Audience :: Developers",
     "Topic :: Scientific/Engineering :: Physics",
     "Topic :: Scientific/Engineering :: Visualization",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Education",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+    "Environment :: Console",
+    "Framework :: AsyncIO"
 ]
 
 dependencies = [
@@ -73,7 +90,10 @@ dev = [
     "isort>=5.12.0",
     "flake8>=6.0.0",
     "mypy>=1.5.0",
-    "pre-commit>=3.4.0"
+    "pre-commit>=3.4.0",
+    "build>=0.10.0",
+    "twine>=4.0.0",
+    "setuptools-scm>=8.0"
 ]
 
 docs = [
@@ -91,19 +111,48 @@ research = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/psianimator/psianimator-mcp"
-Repository = "https://github.com/psianimator/psianimator-mcp"
-Documentation = "https://psianimator-mcp.readthedocs.io"
-"Bug Reports" = "https://github.com/psianimator/psianimator-mcp/issues"
+Homepage = "https://github.com/username/PsiAnimator-MCP"
+Repository = "https://github.com/username/PsiAnimator-MCP"
+"Bug Reports" = "https://github.com/username/PsiAnimator-MCP/issues"
+"Source Code" = "https://github.com/username/PsiAnimator-MCP"
+Changelog = "https://github.com/username/PsiAnimator-MCP/blob/main/CHANGELOG.md"
 
 [project.scripts]
 psianimator-mcp = "psianimator_mcp.cli:main"
 
+[project.entry-points."mcp.servers"]
+psianimator-mcp = "psianimator_mcp.cli:main"
+
+[tool.setuptools]
+include-package-data = true
+zip-safe = false
+
 [tool.setuptools.packages.find]
 where = ["src"]
+include = ["psianimator_mcp*"]
+
+[tool.setuptools.package-dir]
+"" = "src"
 
 [tool.setuptools.package-data]
-psianimator_mcp = ["py.typed"]
+psianimator_mcp = [
+    "py.typed",
+    "*.json",
+    "*.yaml",
+    "*.yml"
+]
+"*" = [
+    "README.md",
+    "LICENSE",
+    "config/*.json",
+    "scripts/*.sh",
+    "scripts/*.ps1",
+    "scripts/*.py"
+]
+
+# Dynamic version from package
+[tool.setuptools.dynamic]
+version = {attr = "psianimator_mcp.__version__"}
 
 # Development tools configuration
 [tool.black]

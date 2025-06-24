@@ -1,0 +1,134 @@
+name: Test Installation Scripts
+
+on:
+  push:
+    branches: [ main ]
+    paths: 
+      - 'scripts/**'
+      - '.github/workflows/test-install.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'scripts/**'
+      - '.github/workflows/test-install.yml'
+
+jobs:
+  test-unix-install:
+    name: Test Unix Installation Script
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Test installation script syntax
+      run: |
+        bash -n scripts/install.sh
+    
+    - name: Test from-source installation
+      run: |
+        chmod +x scripts/install.sh
+        ./scripts/install.sh --from-source
+    
+    - name: Verify installation
+      run: |
+        psianimator-mcp --version
+        psianimator-mcp test
+
+  test-windows-install:
+    name: Test Windows Installation Script  
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Test PowerShell script syntax
+      run: |
+        Get-Command scripts/install.ps1
+        
+    - name: Test from-source installation
+      run: |
+        .\scripts\install.ps1 -FromSource
+    
+    - name: Verify installation
+      run: |
+        psianimator-mcp --version
+        psianimator-mcp test
+
+  test-postinstall:
+    name: Test Post-Installation Script
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install package
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e ".[dev]"
+    
+    - name: Test post-installation script
+      run: |
+        python scripts/postinstall.py
+    
+    - name: Verify configuration was created
+      run: |
+        test -f ~/.config/psianimator-mcp/config.json
+        
+    - name: Test CLI setup command
+      run: |
+        psianimator-mcp setup
+
+  test-docker:
+    name: Test Docker Installation
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Create test Dockerfile
+      run: |
+        cat > Dockerfile.test << 'EOF'
+        FROM python:3.9-slim
+        
+        # Install system dependencies
+        RUN apt-get update && apt-get install -y \
+            git curl bash \
+            && rm -rf /var/lib/apt/lists/*
+        
+        # Copy project
+        COPY . /app
+        WORKDIR /app
+        
+        # Test installation
+        RUN chmod +x scripts/install.sh
+        RUN ./scripts/install.sh --from-source
+        
+        # Test functionality
+        RUN psianimator-mcp --version
+        RUN psianimator-mcp test
+        
+        CMD ["psianimator-mcp", "--help"]
+        EOF
+    
+    - name: Build and test Docker image
+      run: |
+        docker build -f Dockerfile.test -t psianimator-mcp-test .
+        docker run --rm psianimator-mcp-test

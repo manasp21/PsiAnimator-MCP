@@ -1,0 +1,63 @@
+{
+    "quantum": {
+        "precision": 1e-12,
+        "max_hilbert_dimension": 1024,
+        "enable_gpu": false,
+        "state_validation": true,
+        "normalization_tolerance": 1e-10
+    },
+    "animation": {
+        "quality": "medium_quality",
+        "frame_rate": 30,
+        "output_format": "mp4",
+        "cache_animations": true,
+        "cache_size_mb": 500,
+        "resolution": {
+            "width": 1920,
+            "height": 1080
+        }
+    },
+    "server": {
+        "log_level": "INFO",
+        "enable_logging": true,
+        "output_directory": "./output",
+        "max_concurrent_requests": 10,
+        "request_timeout": 300
+    },
+    "manim": {
+        "renderer": "cairo",
+        "background_color": "#000000",
+        "tex_template": "default",
+        "preview": false,
+        "write_to_movie": true,
+        "verbosity": "WARNING"
+    },
+    "bloch_sphere": {
+        "sphere_color": "#0066cc",
+        "vector_color": "#ff6600",
+        "show_axes": true,
+        "show_equator": true,
+        "animation_duration": 3.0
+    },
+    "wigner_function": {
+        "grid_resolution": 100,
+        "x_range": [-4, 4],
+        "p_range": [-4, 4],
+        "colormap": "RdBu",
+        "contour_levels": 20
+    },
+    "quantum_circuit": {
+        "gate_spacing": 1.0,
+        "wire_spacing": 1.0,
+        "show_measurements": true,
+        "animate_gates": true,
+        "gate_duration": 0.5
+    },
+    "energy_levels": {
+        "show_populations": true,
+        "show_transitions": true,
+        "level_spacing": 1.0,
+        "transition_color": "#ff0000",
+        "population_color": "#0066ff"
+    }
+}

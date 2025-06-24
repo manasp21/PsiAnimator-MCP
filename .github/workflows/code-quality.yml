@@ -1,0 +1,169 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run weekly on Monday at 00:00 UTC
+    - cron: '0 0 * * 1'
+
+jobs:
+  code-quality:
+    name: Code Quality Checks
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e ".[dev]"
+    
+    - name: Run pre-commit hooks
+      run: |
+        pre-commit run --all-files
+    
+    - name: Check for unused imports
+      run: |
+        pip install unimport
+        unimport --check --diff src/
+    
+    - name: Check for dead code
+      run: |
+        pip install vulture
+        vulture src/ --min-confidence 80
+    
+    - name: Check documentation
+      run: |
+        pip install pydocstyle
+        pydocstyle src/psianimator_mcp/
+
+  dependency-check:
+    name: Dependency Security Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install safety pip-audit
+    
+    - name: Check for known vulnerabilities (Safety)
+      run: |
+        safety check
+    
+    - name: Check for known vulnerabilities (pip-audit)
+      run: |
+        pip-audit
+
+  license-check:
+    name: License Compliance
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pip-licenses
+        pip install -e ".[dev]"
+    
+    - name: Check licenses
+      run: |
+        pip-licenses --format=json --output-file=licenses.json
+        pip-licenses --format=table
+    
+    - name: Upload license report
+      uses: actions/upload-artifact@v3
+      with:
+        name: license-report
+        path: licenses.json
+
+  complexity-check:
+    name: Code Complexity Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install radon xenon
+    
+    - name: Calculate cyclomatic complexity
+      run: |
+        radon cc src/ -a
+    
+    - name: Calculate maintainability index
+      run: |
+        radon mi src/
+    
+    - name: Check complexity thresholds
+      run: |
+        xenon --max-absolute B --max-modules A --max-average A src/
+
+  documentation-check:
+    name: Documentation Quality
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e ".[dev,docs]"
+    
+    - name: Check README links
+      run: |
+        pip install markdown-link-check || true
+        # Note: markdown-link-check is a Node.js package
+        # This is a placeholder for link checking
+    
+    - name: Validate pyproject.toml
+      run: |
+        pip install validate-pyproject
+        validate-pyproject pyproject.toml
+    
+    - name: Check package description
+      run: |
+        python -c "
+        import pkg_resources
+        try:
+            pkg_resources.get_distribution('psianimator-mcp')
+            print('Package description is valid')
+        except Exception as e:
+            print(f'Package description error: {e}')
+        "

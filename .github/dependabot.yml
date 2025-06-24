@@ -1,0 +1,65 @@
+version: 2
+updates:
+  # Python dependencies
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    reviewers:
+      - "maintainer-username"  # Replace with actual GitHub username
+    assignees:
+      - "maintainer-username"  # Replace with actual GitHub username
+    labels:
+      - "dependencies"
+      - "python"
+    ignore:
+      # Ignore major version updates for critical dependencies
+      - dependency-name: "qutip"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "manim"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "numpy"
+        update-types: ["version-update:semver-major"]
+    groups:
+      # Group development dependencies together
+      dev-dependencies:
+        patterns:
+          - "pytest*"
+          - "black"
+          - "isort"
+          - "flake8"
+          - "mypy"
+          - "pre-commit"
+      # Group documentation dependencies
+      docs-dependencies:
+        patterns:
+          - "sphinx*"
+          - "myst-parser"
+      # Group scientific computing dependencies
+      scientific-dependencies:
+        patterns:
+          - "numpy"
+          - "scipy"
+          - "matplotlib"
+          - "pandas"
+          - "h5py"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "github-actions"
