@@ -3,7 +3,10 @@
     "allow": [
       "Bash(mkdir:*)",
       "Bash(find:*)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(gh repo view:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(touch:*)"
     ],
     "deny": []
   }

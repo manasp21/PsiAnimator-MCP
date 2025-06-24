@@ -7,12 +7,12 @@ import numpy as np
 import qutip as qt
 import asyncio
 
-from src.psianimator_mcp.tools.quantum_state_tools import create_quantum_state
-from src.psianimator_mcp.tools.evolution_tools import evolve_quantum_system
-from src.psianimator_mcp.tools.measurement_tools import measure_observable
-from src.psianimator_mcp.tools.gate_tools import quantum_gate_sequence
-from src.psianimator_mcp.tools.entanglement_tools import calculate_entanglement
-from src.psianimator_mcp.server.config import MCPConfig
+from psianimator_mcp.tools.quantum_state_tools import create_quantum_state
+from psianimator_mcp.tools.evolution_tools import evolve_quantum_system
+from psianimator_mcp.tools.measurement_tools import measure_observable
+from psianimator_mcp.tools.gate_tools import quantum_gate_sequence
+from psianimator_mcp.tools.entanglement_tools import calculate_entanglement
+from psianimator_mcp.server.config import MCPConfig
 
 
 class TestMCPTools:

@@ -6,8 +6,8 @@ import pytest
 import numpy as np
 import qutip as qt
 
-from src.psianimator_mcp.quantum.state_manager import QuantumStateManager
-from src.psianimator_mcp.server.exceptions import QuantumStateError, ValidationError
+from psianimator_mcp.quantum.state_manager import QuantumStateManager
+from psianimator_mcp.server.exceptions import QuantumStateError, ValidationError
 
 
 class TestQuantumStateManager:

@@ -53,12 +53,11 @@ classifiers = [
 ]
 
 dependencies = [
-    # Primary frameworks  
+    # Core frameworks (essential)
     "qutip>=4.7.0",
-    "manim>=0.18.0",
     "mcp>=1.0.0",
     
-    # Scientific computing
+    # Essential scientific computing
     "numpy>=1.24.0",
     "scipy>=1.11.0", 
     "matplotlib>=3.7.0",
@@ -66,13 +65,6 @@ dependencies = [
     # Async and networking
     "aiohttp>=3.8.0",
     "websockets>=11.0.0",
-    
-    # Data handling
-    "h5py>=3.9.0",
-    "pandas>=2.0.0",
-    
-    # Optional quantum libraries for compatibility
-    "qiskit>=0.45.0",
     
     # Utility libraries
     "pydantic>=2.0.0",
@@ -103,11 +95,25 @@ docs = [
     "sphinx-autodoc-typehints>=1.24.0"
 ]
 
+animation = [
+    "manim>=0.18.0",
+    "h5py>=3.9.0",
+    "pandas>=2.0.0"
+]
+
+quantum-extra = [
+    "qiskit>=0.45.0"
+]
+
 research = [
     "jupyter>=1.0.0",
     "jupyterlab>=4.0.0",
     "ipywidgets>=8.1.0",
     "plotly>=5.15.0"
+]
+
+all = [
+    "psianimator-mcp[animation,quantum-extra,research]"
 ]
 
 [project.urls]

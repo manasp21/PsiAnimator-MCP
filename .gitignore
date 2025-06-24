@@ -16,12 +16,9 @@ parts/
 sdist/
 var/
 wheels/
-pip-wheel-metadata/
-share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-MANIFEST
 
 # Virtual environments
 .env
@@ -32,7 +29,7 @@ ENV/
 env.bak/
 venv.bak/
 
-# IDE
+# IDEs
 .vscode/
 .idea/
 *.swp
@@ -43,12 +40,10 @@ venv.bak/
 .coverage
 .pytest_cache/
 .tox/
-.nox/
 htmlcov/
 .coverage.*
 coverage.xml
 *.cover
-*.py,cover
 .hypothesis/
 
 # Jupyter Notebook
@@ -67,26 +62,32 @@ coverage.xml
 .dmypy.json
 dmypy.json
 
-# Pyre type checker
-.pyre/
-
 # Manim
 media/
-Tex/
+videos/
+images/
+partial_movie_files/
 
-# Quantum simulation data
-*.h5
-*.hdf5
-simulations/
-
-# Animation outputs
+# PsiAnimator-MCP specific
+output/
 animations/
-renders/
+temp/
+cache/
 *.mp4
+*.mov
 *.gif
-*.webm
+*.png
+*.jpg
+*.jpeg
 
-# OS generated files
+# Logs
+*.log
+logs/
+
+# Configuration (user-specific)
+config/local_config.json
+
+# OS
 .DS_Store
 .DS_Store?
 ._*
@@ -95,6 +96,9 @@ renders/
 ehthumbs.db
 Thumbs.db
 
-# Logs
-*.log
-logs/
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo

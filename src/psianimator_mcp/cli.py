@@ -181,6 +181,7 @@ def test():
         console.print("✅ All imports successful")
         
         # Test basic functionality
+        from .server import MCPConfig
         config = MCPConfig()
         state_manager = QuantumStateManager(config.max_hilbert_dimension)
         console.print("✅ Core components initialized")
