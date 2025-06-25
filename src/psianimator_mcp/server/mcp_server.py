@@ -28,14 +28,23 @@ from mcp.types import (
 
 from .config import MCPConfig
 from .exceptions import QuantumMCPError, ValidationError, ConfigurationError
+
+# Core tools (always available)
 from ..tools import (
     create_quantum_state,
     evolve_quantum_system,
     measure_observable,
-    animate_quantum_process,
     quantum_gate_sequence,
     calculate_entanglement
 )
+
+# Check if animation functionality is available
+try:
+    from ..tools import animate_quantum_process
+    _ANIMATION_AVAILABLE = True
+except ImportError:
+    animate_quantum_process = None
+    _ANIMATION_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +86,7 @@ class MCPServer:
     def _register_tools(self) -> None:
         """Register all MCP tools with their schemas."""
         
-        # Tool definitions with JSON schemas
+        # Core tool definitions with JSON schemas (always available)
         tools = [
             Tool(
                 name="create_quantum_state",
@@ -147,40 +156,6 @@ class MCPServer:
                 }
             ),
             Tool(
-                name="animate_quantum_process",
-                description="Generate Manim animations of quantum processes",
-                inputSchema={
-                    "type": "object", 
-                    "properties": {
-                        "animation_type": {
-                            "type": "string",
-                            "enum": ["bloch_evolution", "wigner_dynamics", "state_tomography", 
-                                   "circuit_execution", "energy_levels", "photon_statistics"]
-                        },
-                        "data_source": {"type": "string"},
-                        "render_quality": {
-                            "type": "string",
-                            "enum": ["low", "medium", "high", "production"],
-                            "default": "medium"
-                        },
-                        "output_format": {
-                            "type": "string", 
-                            "enum": ["mp4", "gif", "webm"],
-                            "default": "mp4"
-                        },
-                        "frame_rate": {
-                            "type": "integer",
-                            "minimum": 1,
-                            "maximum": 120,
-                            "default": 30
-                        },
-                        "duration": {"type": "number", "minimum": 0.1},
-                        "view_config": {"type": "object"}
-                    },
-                    "required": ["animation_type", "data_source"]
-                }
-            ),
-            Tool(
                 name="quantum_gate_sequence",
                 description="Apply sequence of quantum gates with visualization",
                 inputSchema={
@@ -228,6 +203,47 @@ class MCPServer:
             )
         ]
         
+        # Add animation tool if available
+        if _ANIMATION_AVAILABLE:
+            animation_tool = Tool(
+                name="animate_quantum_process",
+                description="Generate Manim animations of quantum processes",
+                inputSchema={
+                    "type": "object", 
+                    "properties": {
+                        "animation_type": {
+                            "type": "string",
+                            "enum": ["bloch_evolution", "wigner_dynamics", "state_tomography", 
+                                   "circuit_execution", "energy_levels", "photon_statistics"]
+                        },
+                        "data_source": {"type": "string"},
+                        "render_quality": {
+                            "type": "string",
+                            "enum": ["low", "medium", "high", "production"],
+                            "default": "medium"
+                        },
+                        "output_format": {
+                            "type": "string", 
+                            "enum": ["mp4", "gif", "webm"],
+                            "default": "mp4"
+                        },
+                        "frame_rate": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 120,
+                            "default": 30
+                        },
+                        "duration": {"type": "number", "minimum": 0.1},
+                        "view_config": {"type": "object"}
+                    },
+                    "required": ["animation_type", "data_source"]
+                }
+            )
+            tools.append(animation_tool)
+            logger.info("Animation functionality available - registered animate_quantum_process tool")
+        else:
+            logger.info("Animation functionality not available - animate_quantum_process tool not registered")
+        
         # Register each tool
         for tool in tools:
             self.server.list_tools().append(tool)
@@ -255,7 +271,13 @@ class MCPServer:
                 elif name == "measure_observable": 
                     result = await measure_observable(arguments, self.config)
                 elif name == "animate_quantum_process":
-                    result = await animate_quantum_process(arguments, self.config)
+                    if _ANIMATION_AVAILABLE and animate_quantum_process is not None:
+                        result = await animate_quantum_process(arguments, self.config)
+                    else:
+                        raise ValidationError(
+                            "Animation functionality not available. "
+                            "Install animation dependencies: pip install 'psianimator-mcp[animation]'"
+                        )
                 elif name == "quantum_gate_sequence":
                     result = await quantum_gate_sequence(arguments, self.config)
                 elif name == "calculate_entanglement":

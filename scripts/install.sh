@@ -47,7 +47,15 @@ check_pip() {
 # Install from PyPI
 install_from_pypi() {
     echo -e "${YELLOW}Installing PsiAnimator-MCP from PyPI...${NC}"
-    python3 -m pip install --upgrade psianimator-mcp
+    
+    if python3 -m pip install --upgrade psianimator-mcp; then
+        echo -e "${GREEN}✓ Successfully installed from PyPI${NC}"
+    else
+        echo -e "${RED}✗ PyPI installation failed${NC}"
+        echo -e "${YELLOW}This is expected if the package isn't published yet${NC}"
+        echo -e "${YELLOW}Please install from source instead${NC}"
+        exit 1
+    fi
 }
 
 # Install from source
@@ -61,8 +69,20 @@ install_from_source() {
         exit 1
     fi
     
-    # Install in development mode
-    python3 -m pip install -e ".[dev]"
+    # Install in development mode with fallback
+    echo "Attempting installation with dev dependencies..."
+    if python3 -m pip install -e ".[dev]"; then
+        echo -e "${GREEN}✓ Installed with dev dependencies${NC}"
+    else
+        echo -e "${YELLOW}⚠️ Dev dependencies failed, trying core installation...${NC}"
+        if python3 -m pip install -e .; then
+            echo -e "${GREEN}✓ Core installation successful${NC}"
+            echo -e "${YELLOW}Note: Some features may require additional dependencies${NC}"
+        else
+            echo -e "${RED}✗ Installation failed${NC}"
+            exit 1
+        fi
+    fi
 }
 
 # Install system dependencies (optional)
@@ -217,7 +237,7 @@ main() {
     echo "  python3 -m psianimator_mcp.cli --help"
     echo ""
     echo "For examples and documentation:"
-    echo "  https://github.com/your-username/PsiAnimator-MCP"
+    echo "  https://github.com/manasp21/PsiAnimator-MCP"
 }
 
 # Handle script arguments

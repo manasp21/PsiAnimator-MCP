@@ -117,11 +117,11 @@ all = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/username/PsiAnimator-MCP"
-Repository = "https://github.com/username/PsiAnimator-MCP"
-"Bug Reports" = "https://github.com/username/PsiAnimator-MCP/issues"
-"Source Code" = "https://github.com/username/PsiAnimator-MCP"
-Changelog = "https://github.com/username/PsiAnimator-MCP/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/manasp21/PsiAnimator-MCP"
+Repository = "https://github.com/manasp21/PsiAnimator-MCP"
+"Bug Reports" = "https://github.com/manasp21/PsiAnimator-MCP/issues"
+"Source Code" = "https://github.com/manasp21/PsiAnimator-MCP"
+Changelog = "https://github.com/manasp21/PsiAnimator-MCP/blob/main/CHANGELOG.md"
 
 [project.scripts]
 psianimator-mcp = "psianimator_mcp.cli:main"
@@ -163,7 +163,7 @@ version = {attr = "psianimator_mcp.__version__"}
 # Development tools configuration
 [tool.black]
 line-length = 88
-target-version = ['py39']
+target-version = ['py310']
 include = '\.pyi?$'
 extend-exclude = '''
 /(

@@ -283,7 +283,7 @@ def examples():
     console.print("   psianimator-mcp test")
     console.print("")
     
-    console.print("For more examples, see: https://github.com/username/PsiAnimator-MCP/tree/main/examples")
+    console.print("For more examples, see: https://github.com/manasp21/PsiAnimator-MCP/tree/main/examples")
 
 # Create a default callback that runs serve when no command is specified
 @app.callback(invoke_without_command=True)

@@ -82,7 +82,20 @@ function Test-Pip {
 
 function Install-FromPyPI {
     Write-ColorOutput "Installing PsiAnimator-MCP from PyPI..." "Yellow"
-    python -m pip install --upgrade psianimator-mcp
+    
+    try {
+        python -m pip install --upgrade psianimator-mcp
+        if ($LASTEXITCODE -eq 0) {
+            Write-ColorOutput "✓ Successfully installed from PyPI" "Green"
+        } else {
+            throw "PyPI installation failed"
+        }
+    } catch {
+        Write-ColorOutput "✗ PyPI installation failed" "Red"
+        Write-ColorOutput "This is expected if the package isn't published yet" "Yellow"
+        Write-ColorOutput "Please install from source instead" "Yellow"
+        exit 1
+    }
 }
 
 function Install-FromSource {
@@ -95,8 +108,30 @@ function Install-FromSource {
         exit 1
     }
     
-    # Install in development mode
-    python -m pip install -e ".[dev]"
+    # Install in development mode with fallback
+    Write-Host "Attempting installation with dev dependencies..."
+    try {
+        python -m pip install -e ".[dev]"
+        if ($LASTEXITCODE -eq 0) {
+            Write-ColorOutput "✓ Installed with dev dependencies" "Green"
+        } else {
+            throw "Dev installation failed"
+        }
+    } catch {
+        Write-ColorOutput "⚠️ Dev dependencies failed, trying core installation..." "Yellow"
+        try {
+            python -m pip install -e .
+            if ($LASTEXITCODE -eq 0) {
+                Write-ColorOutput "✓ Core installation successful" "Green"
+                Write-ColorOutput "Note: Some features may require additional dependencies" "Yellow"
+            } else {
+                throw "Core installation failed"
+            }
+        } catch {
+            Write-ColorOutput "✗ Installation failed" "Red"
+            exit 1
+        }
+    }
 }
 
 function Test-SystemDependencies {
@@ -299,7 +334,7 @@ function Main {
     Write-Host "  python -m psianimator_mcp.cli --help"
     Write-Host ""
     Write-Host "For examples and documentation:"
-    Write-Host "  https://github.com/your-username/PsiAnimator-MCP"
+    Write-Host "  https://github.com/manasp21/PsiAnimator-MCP"
 }
 
 # Execute main function

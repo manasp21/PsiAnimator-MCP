@@ -9,13 +9,20 @@ import asyncio
 import json
 from pathlib import Path
 
-from src.psianimator_mcp.server.config import MCPConfig
-from src.psianimator_mcp.tools.quantum_state_tools import create_quantum_state
-from src.psianimator_mcp.tools.evolution_tools import evolve_quantum_system
-from src.psianimator_mcp.tools.measurement_tools import measure_observable
-from src.psianimator_mcp.tools.gate_tools import quantum_gate_sequence
-from src.psianimator_mcp.tools.entanglement_tools import calculate_entanglement
-from src.psianimator_mcp.tools.animation_tools import animate_quantum_process
+from psianimator_mcp.server.config import MCPConfig
+from psianimator_mcp.tools.quantum_state_tools import create_quantum_state
+from psianimator_mcp.tools.evolution_tools import evolve_quantum_system
+from psianimator_mcp.tools.measurement_tools import measure_observable
+from psianimator_mcp.tools.gate_tools import quantum_gate_sequence
+from psianimator_mcp.tools.entanglement_tools import calculate_entanglement
+
+# Animation functionality (optional)
+try:
+    from psianimator_mcp.tools.animation_tools import animate_quantum_process
+    _ANIMATION_AVAILABLE = True
+except ImportError:
+    animate_quantum_process = None
+    _ANIMATION_AVAILABLE = False
 
 
 async def basic_qubit_example():
@@ -233,8 +240,13 @@ async def quantum_circuit_example():
 
 
 async def animation_example():
-    """Example: Animation generation."""
+    """Example: Animation generation (requires animation dependencies)."""
     print("\\n=== Animation Example ===")
+    
+    if not _ANIMATION_AVAILABLE:
+        print("⚠️ Animation functionality not available!")
+        print("Install animation dependencies: pip install 'psianimator-mcp[animation]'")
+        return
     
     config = MCPConfig()
     
@@ -279,8 +291,9 @@ async def main():
         await bell_state_example() 
         await harmonic_oscillator_example()
         await quantum_circuit_example()
-        # Note: Animation example requires Manim installation
-        # await animation_example()
+        
+        # Run animation example if available
+        await animation_example()
         
         print("\\n" + "=" * 50)
         print("All examples completed successfully!")
