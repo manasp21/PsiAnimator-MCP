@@ -1,0 +1,110 @@
+[build-system]
+requires = [
+    "setuptools>=64", 
+    "wheel",
+    "setuptools-scm>=8.0"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "psianimator-mcp"
+dynamic = ["version"]
+description = "Quantum Physics Simulation and Animation Server using MCP, QuTip, and Manim"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "PsiAnimator Development Team", email = "contact@psianimator.dev"}
+]
+
+keywords = [
+    "quantum-physics", 
+    "simulation", 
+    "animation", 
+    "manim", 
+    "qutip", 
+    "mcp",
+    "visualization",
+    "quantum-computing",
+    "model-context-protocol",
+    "claude",
+    "ai"
+]
+
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: OS Independent"
+]
+
+# Minimal dependencies for deployment
+dependencies = [
+    # Core MCP framework
+    "mcp>=1.0.0",
+    
+    # Essential networking
+    "aiohttp>=3.8.0",
+    "websockets>=11.0.0",
+    
+    # Utility libraries
+    "pydantic>=2.0.0",
+    "typer>=0.9.0",
+    "rich>=13.0.0",
+    "loguru>=0.7.0",
+    
+    # Minimal scientific stack
+    "numpy>=1.24.0",
+    "matplotlib>=3.7.0"
+]
+
+[project.optional-dependencies]
+# Heavy scientific dependencies as optional
+quantum = [
+    "qutip>=4.7.0",
+    "scipy>=1.11.0"
+]
+
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=23.0.0",
+    "isort>=5.12.0",
+    "flake8>=6.0.0"
+]
+
+animation = [
+    "manim>=0.18.0",
+    "h5py>=3.9.0",
+    "pandas>=2.0.0"
+]
+
+all = [
+    "psianimator-mcp[quantum,animation]"
+]
+
+[project.urls]
+Homepage = "https://github.com/manasp21/PsiAnimator-MCP"
+Repository = "https://github.com/manasp21/PsiAnimator-MCP"
+"Bug Reports" = "https://github.com/manasp21/PsiAnimator-MCP/issues"
+
+[project.scripts]
+psianimator-mcp = "psianimator_mcp.cli:main"
+
+[project.entry-points."mcp.servers"]
+psianimator-mcp = "psianimator_mcp.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["psianimator_mcp*"]
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.setuptools.dynamic]
+version = {attr = "psianimator_mcp.__version__"}

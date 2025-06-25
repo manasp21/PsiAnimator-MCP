@@ -1,0 +1,47 @@
+# Minimal Dockerfile for PsiAnimator-MCP
+# Core MCP server without heavy scientific dependencies
+
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Copy essential files
+COPY pyproject.toml ./
+COPY src/ ./src/
+
+# Install only core MCP dependencies (no scientific computing)
+RUN pip install --no-cache-dir \
+    mcp \
+    aiohttp \
+    websockets \
+    pydantic \
+    typer \
+    rich \
+    loguru
+
+# Install minimal numpy/matplotlib for basic functionality
+RUN pip install --no-cache-dir \
+    numpy \
+    matplotlib
+
+# Install the application without heavy dependencies
+RUN pip install --no-cache-dir -e . --no-deps
+
+# Copy configuration
+COPY config/ ./config/
+RUN mkdir -p /root/.config/psianimator-mcp
+COPY config/default_config.json /root/.config/psianimator-mcp/config.json
+
+# Environment
+ENV PYTHONPATH=/app/src \
+    PSIANIMATOR_CONFIG=/root/.config/psianimator-mcp/config.json \
+    PYTHONUNBUFFERED=1
+
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=5s --retries=2 \
+    CMD python -c "import psianimator_mcp" || exit 1
+
+# Run server
+CMD ["python", "-m", "psianimator_mcp.cli", "serve"]

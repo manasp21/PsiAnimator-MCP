@@ -2,7 +2,7 @@
 
 ## Smithery Deployment
 
-This repository is configured for deployment on [Smithery](https://smithery.ai) with all necessary configuration files.
+This repository is configured for deployment on [Smithery](https://smithery.ai) with simplified, reliable configuration.
 
 ### Quick Deploy
 
@@ -12,84 +12,102 @@ This repository is configured for deployment on [Smithery](https://smithery.ai) 
 
 ### Configuration Files
 
-- **`Dockerfile`**: Production-optimized container with scientific dependencies
-- **`Dockerfile.light`**: Lightweight alternative using conda-forge (faster builds)
-- **`smithery.yaml`**: Smithery deployment configuration
-- **`environment.yml`**: Conda environment for lightweight builds
+- **`Dockerfile`**: Simplified build optimized for cloud deployment
+- **`Dockerfile.minimal`**: Ultra-lightweight version (core MCP only)
+- **`smithery.yaml`**: Simplified Smithery deployment configuration
 - **`config/default_config.json`**: Default server configuration
 
-### Key Features Handled
+### Build Options (if you encounter timeouts)
 
-✅ **Heavy Scientific Dependencies**: Pre-installed NumPy, SciPy, QuTiP with proper system libraries  
-✅ **System Dependencies**: BLAS, LAPACK, Fortran compilers included  
-✅ **MCP Protocol**: Full Model Context Protocol server implementation  
-✅ **Security**: Non-root user, minimal attack surface  
-✅ **Health Checks**: Built-in container health monitoring  
-✅ **Multi-transport**: Supports both stdio and WebSocket transports  
-
-### Environment Variables
-
-Set these in Smithery for custom configuration:
-
-- `PSIANIMATOR_TRANSPORT`: `stdio` (default) or `websocket`
-- `PSIANIMATOR_LOG_LEVEL`: `DEBUG`, `INFO`, `WARNING`, `ERROR`
-- `PSIANIMATOR_CONFIG`: Path to custom config file
-
-### Resource Requirements
-
-**Minimum:**
-- Memory: 512Mi
-- CPU: 250m
-
-**Recommended:**
-- Memory: 2Gi
-- CPU: 1000m
-
-### Build Alternatives
-
-1. **Standard Build** (`Dockerfile`): Full scientific stack with system compilation
-2. **Fast Build** (`Dockerfile.light`): Uses conda-forge prebuilt packages (recommended for faster deployment)
-
-To use the lightweight build, update `smithery.yaml`:
+**Option 1: Default** (Recommended)
 ```yaml
-spec:
-  build:
-    dockerfile: "./Dockerfile.light"
+# Current smithery.yaml uses this
+dockerfile: "./Dockerfile"
 ```
 
-### Troubleshooting
+**Option 2: Minimal Build** (If timeout issues persist)
+```yaml
+# Update smithery.yaml to use:
+dockerfile: "./Dockerfile.minimal"
+```
 
-**Build Issues:**
-- Heavy dependencies require significant build time
-- Use `Dockerfile.light` for faster builds
-- Ensure adequate memory allocation during build
+**Option 3: Conda-based** (Alternative approach)
+```yaml
+# Update smithery.yaml to use:
+dockerfile: "./Dockerfile.light"
+```
 
-**Runtime Issues:**
-- Check health endpoints
-- Verify MCP protocol connectivity
-- Review logs for import errors
+### Troubleshooting Smithery Errors
+
+**"Unexpected internal error or timeout":**
+
+1. **Try minimal build** - Update `smithery.yaml`:
+   ```yaml
+   spec:
+     build:
+       dockerfile: "./Dockerfile.minimal"
+   ```
+
+2. **Reduce complexity** - The minimal Dockerfile skips heavy scientific dependencies:
+   - ✅ Core MCP server functionality
+   - ✅ Basic quantum operations  
+   - ⚠️ Advanced physics simulations may be limited
+
+3. **Check logs** - Look for specific timeout or memory issues
+
+**Build Taking Too Long:**
+- Default: Uses prebuilt wheels (faster)
+- Minimal: Only essential dependencies
+- Light: Uses conda-forge (may be slower but more reliable)
 
 ### Local Testing
 
-Test the Docker build locally:
+Test builds locally to debug:
 
 ```bash
-# Standard build
-docker build -t psianimator-mcp .
+# Test default build
+docker build -t test-default .
 
-# Lightweight build  
-docker build -f Dockerfile.light -t psianimator-mcp-light .
+# Test minimal build (fastest)
+docker build -f Dockerfile.minimal -t test-minimal .
 
-# Test run
-docker run --rm psianimator-mcp
+# Test locally
+docker run --rm test-default python -c "import psianimator_mcp; print('Success')"
 ```
 
-### Production Considerations
+### Environment Variables
 
-- Use persistent volumes for output data
-- Configure log aggregation
-- Set up monitoring for quantum computations
-- Consider GPU acceleration for large simulations
-- Implement proper backup strategies for quantum state data
+Configure in Smithery:
+- `PSIANIMATOR_TRANSPORT`: `stdio` (default) or `websocket`
+- `PYTHONUNBUFFERED`: `1` (for proper logging)
 
-For more details, see the [Smithery documentation](https://smithery.ai/docs).
+### Resource Requirements
+
+**Minimal:**
+- Memory: 256Mi
+- CPU: 100m
+
+**Default:**
+- Memory: 1Gi  
+- CPU: 500m
+
+### Production Notes
+
+- Start with minimal build for fastest deployment
+- Upgrade to full scientific stack once running
+- MCP server has conditional imports for graceful degradation
+- Heavy physics computations optional
+
+### If All Else Fails
+
+Create a minimal `Dockerfile` with just:
+```dockerfile
+FROM python:3.11-slim
+WORKDIR /app
+COPY . .
+RUN pip install mcp pydantic typer rich
+RUN pip install -e . --no-deps
+CMD ["python", "-m", "psianimator_mcp.cli", "serve"]
+```
+
+The MCP server is designed to work with or without heavy dependencies!

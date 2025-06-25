@@ -1,5 +1,5 @@
 # Smithery deployment configuration for PsiAnimator-MCP
-# MCP server for quantum physics simulations and animations
+# Simplified for reliable cloud deployment
 
 apiVersion: v1
 kind: Service
@@ -8,181 +8,40 @@ metadata:
   name: psianimator-mcp
   description: "Quantum Physics Simulation and Animation MCP Server"
   version: "0.1.0"
-  repository: "https://github.com/manasp21/PsiAnimator-MCP"
   
 spec:
-  # Build configuration
+  # Build configuration - ultra-fast deployment
   build:
-    dockerfile: "./Dockerfile"
+    dockerfile: "./Dockerfile.fast"
     context: "."
-    target: "app"
-    
-    # Build arguments for optimization
-    args:
-      PYTHON_VERSION: "3.11"
-      DEBIAN_FRONTEND: "noninteractive"
-    
-    # Build-time environment variables
-    env:
-      - name: "PIP_NO_CACHE_DIR"
-        value: "1"
-      - name: "PIP_DISABLE_PIP_VERSION_CHECK" 
-        value: "1"
-      - name: "PYTHONDONTWRITEBYTECODE"
-        value: "1"
-      - name: "PYTHONUNBUFFERED"
-        value: "1"
 
   # Runtime configuration
   runtime:
     # Resource requirements
     resources:
       requests:
-        memory: "512Mi"
-        cpu: "250m"
+        memory: "256Mi"
+        cpu: "100m"
       limits:
-        memory: "2Gi"
-        cpu: "1000m"
+        memory: "1Gi"
+        cpu: "500m"
     
     # Environment variables
     env:
       - name: "PSIANIMATOR_TRANSPORT"
         value: "stdio"
-      - name: "PSIANIMATOR_LOG_LEVEL"
-        value: "INFO"
-      - name: "PSIANIMATOR_CONFIG"
-        value: "/home/psianimator/.config/psianimator-mcp/config.json"
-      - name: "PYTHONPATH"
-        value: "/app/src"
+      - name: "PYTHONUNBUFFERED"
+        value: "1"
     
-    # Port configuration (for WebSocket mode if needed)
+    # Port configuration
     ports:
       - name: "websocket"
         port: 3000
-        protocol: "TCP"
         
-    # Health checks
-    health:
-      readiness:
-        exec:
-          command: ["python", "-c", "import psianimator_mcp; print('Ready')"]
-        initialDelaySeconds: 30
-        periodSeconds: 10
-        timeoutSeconds: 5
-        failureThreshold: 3
-      
-      liveness:
-        exec:
-          command: ["python", "-c", "import psianimator_mcp; print('Alive')"]
-        initialDelaySeconds: 60
-        periodSeconds: 30
-        timeoutSeconds: 10
-        failureThreshold: 3
-
-  # Service type - since this is an MCP server, it's primarily stdio-based
-  # but can also run WebSocket mode
+  # Service configuration
   service:
     type: "Server"
-    protocol: "MCP"
     
-    # Interface definitions
-    interfaces:
-      - name: "stdio"
-        type: "stdio"
-        description: "Standard MCP stdio transport"
-        default: true
-        
-      - name: "websocket"
-        type: "websocket"
-        port: 3000
-        description: "WebSocket transport for MCP"
-        
-    # MCP-specific configuration
-    mcp:
-      version: "2024-11-05"
-      capabilities:
-        tools: true
-        logging: true
-        resources: false
-        prompts: false
-      
-      tools:
-        - name: "create_quantum_state"
-          description: "Create quantum states (pure/mixed, single/composite systems)"
-        - name: "evolve_quantum_system"
-          description: "Time evolution using Schrödinger/Master/Stochastic equations"
-        - name: "measure_observable"
-          description: "Perform quantum measurements and calculate expectation values"
-        - name: "quantum_gate_sequence"
-          description: "Apply sequence of quantum gates with visualization"
-        - name: "calculate_entanglement"
-          description: "Compute entanglement measures and visualize correlations"
-        - name: "animate_quantum_process"
-          description: "Generate Manim animations of quantum processes (optional)"
-          optional: true
-
-  # Deployment configuration
+  # Simple deployment
   deployment:
-    # Scaling
     replicas: 1
-    strategy: "RollingUpdate"
-    
-    # Restart policy
-    restartPolicy: "Always"
-    
-    # Security context
-    security:
-      runAsNonRoot: true
-      runAsUser: 1000
-      runAsGroup: 1000
-      fsGroup: 1000
-      
-    # Volume mounts for configuration
-    volumes:
-      - name: "config"
-        mountPath: "/home/psianimator/.config/psianimator-mcp"
-        configMap:
-          name: "psianimator-config"
-          
-    # Node selection (prefer nodes with more memory for scientific computing)
-    nodeSelector:
-      workload-type: "compute"
-      
-  # Monitoring and observability
-  monitoring:
-    metrics:
-      enabled: true
-      path: "/metrics"
-      port: 8080
-      
-    logging:
-      level: "INFO"
-      format: "json"
-      
-    tracing:
-      enabled: false
-
-# Configuration for dependencies and system requirements
-dependencies:
-  system:
-    # Required system packages for scientific computing
-    packages:
-      - "build-essential"
-      - "gcc"
-      - "g++"
-      - "gfortran"
-      - "libblas-dev"
-      - "liblapack-dev"
-      - "libopenblas-dev"
-      - "libfftw3-dev"
-      - "libhdf5-dev"
-      - "pkg-config"
-      
-  python:
-    version: "3.11"
-    # Heavy dependencies that need special handling
-    prebuilt:
-      - "numpy>=1.24.0"
-      - "scipy>=1.11.0"
-      - "qutip>=4.7.0"
-      - "matplotlib>=3.7.0"
