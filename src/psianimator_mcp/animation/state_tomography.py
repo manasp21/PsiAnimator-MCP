@@ -5,6 +5,8 @@ Provides visualization of quantum state tomography including density matrix
 representation, Pauli decomposition, and tomographic reconstruction.
 """
 
+from __future__ import annotations
+
 import numpy as np
 import qutip as qt
 from typing import Dict, List, Optional, Union, Tuple, Any

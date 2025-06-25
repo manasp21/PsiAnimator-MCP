@@ -5,6 +5,8 @@ Handles unitary transformations, measurement operations, quantum channels,
 and general quantum operations on states and operators.
 """
 
+from __future__ import annotations
+
 import numpy as np
 import qutip as qt
 from typing import Dict, List, Optional, Union, Tuple, Any, Callable

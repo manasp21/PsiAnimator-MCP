@@ -5,6 +5,8 @@ Provides visualization of atomic energy levels, transitions, population dynamics
 and laser interactions for multi-level quantum systems.
 """
 
+from __future__ import annotations
+
 import numpy as np
 import qutip as qt
 from typing import Dict, List, Optional, Union, Tuple, Any

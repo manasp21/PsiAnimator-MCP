@@ -5,6 +5,8 @@ Provides specialized Manim scene class with quantum-specific utilities,
 automatic scaling, and common quantum visualization tools.
 """
 
+from __future__ import annotations
+
 import numpy as np
 import qutip as qt
 from typing import Dict, List, Optional, Union, Tuple, Any, Callable

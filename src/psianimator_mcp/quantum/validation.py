@@ -5,6 +5,8 @@ Provides functions to validate quantum states, operators, and ensure
 they satisfy required quantum mechanical properties.
 """
 
+from __future__ import annotations
+
 import numpy as np
 from typing import Union, List, Tuple, Optional
 import qutip as qt

@@ -5,6 +5,8 @@ Provides visualization of photon number distributions, correlation functions,
 and quantum coherence measures for optical quantum states.
 """
 
+from __future__ import annotations
+
 import numpy as np
 import qutip as qt
 from typing import Dict, List, Optional, Union, Tuple, Any

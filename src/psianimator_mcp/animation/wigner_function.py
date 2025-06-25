@@ -5,6 +5,8 @@ Provides visualization of Wigner quasi-probability distributions in phase space
 for harmonic oscillator states and cavity QED systems.
 """
 
+from __future__ import annotations
+
 import numpy as np
 import qutip as qt
 from typing import Dict, List, Optional, Union, Tuple, Any

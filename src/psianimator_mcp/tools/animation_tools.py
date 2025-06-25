@@ -16,15 +16,28 @@ from typing import Dict, List, Optional, Union, Any, Tuple
 import numpy as np
 import qutip as qt
 
-from ..animation.quantum_scene import QuantumScene
-from ..animation.bloch_sphere import BlochSphere3D
-from ..animation.state_tomography import StateTomography
-from ..animation.wigner_function import WignerFunction
-from ..animation.photon_statistics import PhotonStatistics
-from ..animation.quantum_circuit import QuantumCircuit
-from ..animation.energy_levels import EnergyLevelDiagram
-
 from ..quantum.state_manager import QuantumStateManager
+
+# Conditional animation imports
+try:
+    from ..animation.quantum_scene import QuantumScene
+    from ..animation.bloch_sphere import BlochSphere3D
+    from ..animation.state_tomography import StateTomography
+    from ..animation.wigner_function import WignerFunction
+    from ..animation.photon_statistics import PhotonStatistics
+    from ..animation.quantum_circuit import QuantumCircuit
+    from ..animation.energy_levels import EnergyLevelDiagram
+    _ANIMATION_IMPORTS_AVAILABLE = True
+except ImportError as e:
+    # Animation dependencies not available, set placeholders
+    QuantumScene = None
+    BlochSphere3D = None
+    StateTomography = None
+    WignerFunction = None
+    PhotonStatistics = None
+    QuantumCircuit = None
+    EnergyLevelDiagram = None
+    _ANIMATION_IMPORTS_AVAILABLE = False
 from ..server.config import MCPConfig
 from ..server.exceptions import (
     AnimationError,
@@ -60,6 +73,13 @@ async def animate_quantum_process(arguments: Dict[str, Any], config: MCPConfig) 
         Animation generation results with file paths and metadata
     """
     try:
+        # Check if animation functionality is available
+        if not _ANIMATION_IMPORTS_AVAILABLE:
+            raise AnimationError(
+                "Animation functionality not available. "
+                "Please install animation dependencies: pip install 'psianimator-mcp[animation]'"
+            )
+            
         logger.info(f"Generating quantum animation with arguments: {arguments}")
         
         # Validate required arguments

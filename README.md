@@ -29,7 +29,14 @@ iwr https://raw.githubusercontent.com/username/PsiAnimator-MCP/main/scripts/inst
 
 #### Option 3: pip (when available on PyPI)
 ```bash
+# Core installation (quantum computation only)
 pip install psianimator-mcp
+
+# Full installation with animation support
+pip install "psianimator-mcp[animation]"
+
+# Development installation
+pip install "psianimator-mcp[dev,animation]"
 ```
 
 #### Option 4: From source
@@ -43,26 +50,61 @@ cd PsiAnimator-MCP
 
 - Python ≥ 3.10
 - Git (for development installation)
-- LaTeX (optional, for advanced Manim features)
-- FFmpeg (optional, for video generation)
 
-### Manual Installation
+**For animation features:**
+- LaTeX (for advanced mathematical rendering)
+- FFmpeg (for video generation)
+- Cairo graphics library (for high-quality rendering)
 
-For development or custom setups:
+### Installation Options Explained
 
+**🚀 Core Installation** (Recommended for most users)
+```bash
+pip install psianimator-mcp
+```
+- Includes all quantum computation features
+- MCP server functionality
+- QuTip, NumPy, SciPy for quantum physics
+- Works immediately without system dependencies
+
+**🎬 Animation Installation** (For visualization)
+```bash
+pip install "psianimator-mcp[animation]"
+```
+- Everything from core installation
+- Manim for generating animations
+- Requires system dependencies (LaTeX, FFmpeg)
+- Larger download and installation time
+
+**🔧 Development Installation**
 ```bash
 git clone https://github.com/username/PsiAnimator-MCP.git
 cd PsiAnimator-MCP
-pip install -e ".[dev]"
+pip install -e ".[dev,animation]"
 ```
+
+### Why Animation is Optional
+
+Animation features (Manim) are kept optional because:
+
+- **Heavy Dependencies**: Manim requires LaTeX, FFmpeg, and Cairo which can be several GB
+- **Installation Complexity**: System dependencies can fail on different platforms
+- **Use Case Separation**: Many users only need quantum computation, not visualization
+- **CI/Testing Reliability**: Core features can be tested without system dependencies
+- **Disk Space**: Core installation is ~100MB vs ~2GB+ with full animation stack
 
 ### Dependencies
 
-Core dependencies are automatically installed:
-- QuTip ≥ 4.7.0 (quantum physics)
-- Manim ≥ 0.18.0 (animations)
-- MCP ≥ 1.0.0 (protocol)
+**Core dependencies** (automatically installed):
+- QuTip ≥ 4.7.0 (quantum physics computations)
+- MCP ≥ 1.0.0 (Model Context Protocol)
 - NumPy, SciPy, matplotlib (scientific computing)
+- Pydantic, aiohttp (async web framework)
+
+**Animation dependencies** (optional extras):
+- Manim ≥ 0.18.0 (mathematical animations)
+- h5py ≥ 3.9.0 (data storage)
+- pandas ≥ 2.0.0 (data analysis)
 
 ### Post-Installation Setup
 
@@ -74,7 +116,42 @@ psianimator-mcp setup
 This will:
 - Create configuration directory (`~/.config/psianimator-mcp/`)
 - Copy example configuration file
+- Test installation and show feature availability
 - Provide Claude Desktop integration instructions
+
+### Verifying Installation
+
+Check your installation status:
+```bash
+python -c "import psianimator_mcp; print(f'✅ Core: OK, Animation: {psianimator_mcp.is_animation_available()}')"
+```
+
+Expected outputs:
+- `✅ Core: OK, Animation: True` - Full installation with animations
+- `✅ Core: OK, Animation: False` - Core installation only
+
+### Troubleshooting
+
+**Import Errors**
+```bash
+# If you get "No module named 'psianimator_mcp'"
+pip install psianimator-mcp
+
+# If you get animation-related errors
+pip install "psianimator-mcp[animation]"
+```
+
+**Animation Dependencies**
+```bash
+# Ubuntu/Debian
+sudo apt-get install texlive-latex-base ffmpeg libcairo2-dev
+
+# macOS
+brew install mactex ffmpeg cairo
+
+# Windows
+# Install MiKTeX, FFmpeg from official websites
+```
 
 ## Claude Desktop Integration
 

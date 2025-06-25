@@ -5,6 +5,8 @@ Provides visualization of quantum circuits with gate sequences, state tracking,
 and measurement outcomes.
 """
 
+from __future__ import annotations
+
 import numpy as np
 import qutip as qt
 from typing import Dict, List, Optional, Union, Tuple, Any

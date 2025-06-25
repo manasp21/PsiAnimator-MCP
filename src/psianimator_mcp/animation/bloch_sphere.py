@@ -5,6 +5,8 @@ Provides interactive Bloch sphere visualization for qubit states with
 real-time state evolution, measurement visualization, and quantum gates.
 """
 
+from __future__ import annotations
+
 import numpy as np
 import qutip as qt
 from typing import Dict, List, Optional, Union, Tuple, Any

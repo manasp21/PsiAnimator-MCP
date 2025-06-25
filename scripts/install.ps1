@@ -198,20 +198,64 @@ function Test-Installation {
     Write-ColorOutput "Verifying installation..." "Yellow"
     
     try {
-        $importTest = python -c "import psianimator_mcp; print('✓ Package imported successfully')" 2>&1
-        if ($importTest -match "✓") {
-            Write-ColorOutput "✓ PsiAnimator-MCP installed successfully" "Green"
+        # Test basic package import
+        $importResult = python -c @"
+try:
+    import psianimator_mcp
+    print('IMPORT_SUCCESS')
+    
+    # Check animation availability
+    if hasattr(psianimator_mcp, 'is_animation_available'):
+        if psianimator_mcp.is_animation_available():
+            print('ANIMATION_AVAILABLE')
+        else:
+            print('ANIMATION_NOT_AVAILABLE')
+    
+    # Test core imports
+    from psianimator_mcp import QuantumStateManager, MCPServer
+    print('CORE_SUCCESS')
+except ImportError as e:
+    if 'manim' in str(e):
+        print('MANIM_ERROR')
+    else:
+        print('IMPORT_ERROR')
+        print(str(e))
+"@ 2>&1
+
+        if ($importResult -contains "IMPORT_SUCCESS") {
+            Write-ColorOutput "✓ PsiAnimator-MCP package is importable" "Green"
+            
+            if ($importResult -contains "ANIMATION_AVAILABLE") {
+                Write-ColorOutput "✓ Animation functionality is available" "Green"
+            } elseif ($importResult -contains "ANIMATION_NOT_AVAILABLE") {
+                Write-ColorOutput "⚠️ Animation functionality not available (manim not installed)" "Yellow"
+                Write-ColorOutput "   Install with: pip install 'psianimator-mcp[animation]'" "Gray"
+            }
+            
+            if ($importResult -contains "CORE_SUCCESS") {
+                Write-ColorOutput "✓ Core quantum functionality available" "Green"
+            }
             
             # Test CLI
             try {
                 $null = python -m psianimator_mcp.cli --help 2>&1
-                Write-ColorOutput "✓ CLI is working" "Green"
+                if ($LASTEXITCODE -eq 0) {
+                    Write-ColorOutput "✓ CLI is working" "Green"
+                } else {
+                    Write-ColorOutput "⚠️ CLI test failed" "Yellow"
+                }
             }
             catch {
-                Write-ColorOutput "Warning: CLI test failed" "Yellow"
+                Write-ColorOutput "⚠️ CLI test failed" "Yellow"
             }
+        } elseif ($importResult -contains "MANIM_ERROR") {
+            Write-ColorOutput "❌ Package import failed due to missing manim" "Red"
+            Write-ColorOutput "   This should not happen - please report this as a bug." "Red"
+            exit 1
         } else {
-            throw "Import test failed"
+            Write-ColorOutput "✗ Package import failed" "Red"
+            Write-Host $importResult
+            exit 1
         }
     }
     catch {

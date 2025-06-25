@@ -204,9 +204,31 @@ def verify_installation() -> bool:
     try:
         import psianimator_mcp
         print("✓ PsiAnimator-MCP package is importable")
+        
+        # Check for animation availability
+        if hasattr(psianimator_mcp, 'is_animation_available'):
+            if psianimator_mcp.is_animation_available():
+                print("✓ Animation functionality is available")
+            else:
+                print("⚠️  Animation functionality not available (manim not installed)")
+                print("   Install with: pip install 'psianimator-mcp[animation]'")
+        
+        # Test core functionality
+        try:
+            from psianimator_mcp import QuantumStateManager, MCPServer
+            print("✓ Core quantum functionality available")
+        except ImportError as e:
+            print(f"❌ Core functionality import failed: {e}")
+            return False
+            
         return True
     except ImportError as e:
-        print(f"❌ PsiAnimator-MCP package import failed: {e}")
+        error_msg = str(e)
+        if 'manim' in error_msg:
+            print(f"❌ Package import failed due to missing manim: {error_msg}")
+            print("   This should not happen - please report this as a bug.")
+        else:
+            print(f"❌ PsiAnimator-MCP package import failed: {error_msg}")
         return False
 
 
