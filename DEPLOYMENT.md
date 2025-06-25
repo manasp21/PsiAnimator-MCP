@@ -37,23 +37,34 @@ dockerfile: "./Dockerfile.minimal"
 dockerfile: "./Dockerfile.light"
 ```
 
-### Troubleshooting Smithery Errors
+### ✅ Current Status (Optimized for Smithery)
 
-**"Unexpected internal error or timeout":**
+**IMPORTANT: The repository has been optimized for Smithery deployment!**
 
-1. **Try minimal build** - Update `smithery.yaml`:
-   ```yaml
-   spec:
-     build:
-       dockerfile: "./Dockerfile.minimal"
+Changes made:
+- ✅ **Dockerfile**: Now uses only prebuilt wheels (`--only-binary=all`)
+- ✅ **smithery.yaml**: References standard `./Dockerfile`
+- ✅ **Simplified build**: No complex fallbacks or timeouts
+- ✅ **Committed locally**: Ready to push to GitHub
+
+### 🚀 Next Steps for Deployment
+
+1. **Push the optimized changes:**
+   ```bash
+   git push
    ```
 
-2. **Reduce complexity** - The minimal Dockerfile skips heavy scientific dependencies:
-   - ✅ Core MCP server functionality
-   - ✅ Basic quantum operations  
-   - ⚠️ Advanced physics simulations may be limited
+2. **Wait 2-3 minutes** for Smithery cache to refresh
 
-3. **Check logs** - Look for specific timeout or memory issues
+3. **Try Smithery deployment again** - it should now find both files and build successfully
+
+### Troubleshooting (if still having issues)
+
+**If Smithery still says "Could not find Dockerfile":**
+
+1. **Check GitHub**: Verify files are visible at https://github.com/manasp21/PsiAnimator-MCP
+2. **Wait longer**: Smithery cache can take up to 5 minutes to refresh
+3. **Try minimal build**: Update `smithery.yaml` dockerfile to `"./Dockerfile.minimal"`
 
 **Build Taking Too Long:**
 - Default: Uses prebuilt wheels (faster)

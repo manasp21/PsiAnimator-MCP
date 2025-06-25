@@ -14,7 +14,10 @@
       "Bash(rg:*)",
       "Bash(bash:*)",
       "Bash(ls:*)",
-      "Bash(yamllint:*)"
+      "Bash(yamllint:*)",
+      "WebFetch(domain:docs.smithery.ai)",
+      "Bash(git config:*)",
+      "Bash(git push:*)"
     ],
     "deny": []
   }
