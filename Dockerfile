@@ -1,67 +1,47 @@
-# Simple Dockerfile for PsiAnimator-MCP on Smithery
-# Optimized for cloud build environments
+# Optimized Dockerfile for Smithery deployment
+# Fast, reliable build with prebuilt wheels only
 
 FROM python:3.11-slim
 
-# Install minimal system dependencies
-RUN apt-get update && apt-get install -y \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
-# Upgrade pip to latest version
-RUN pip install --no-cache-dir --upgrade pip
-
-# Install core dependencies using prebuilt wheels (fastest approach)
-RUN pip install --no-cache-dir --only-binary=all \
-    numpy \
-    scipy \
-    matplotlib || \
-    pip install --no-cache-dir \
-    numpy \
-    scipy \
-    matplotlib
-
-# Install QuTiP separately (may need fallback)
-RUN pip install --no-cache-dir qutip || \
-    pip install --no-cache-dir --no-binary qutip qutip
-
-# Set working directory
 WORKDIR /app
 
-# Copy only essential files first
+# Copy project files
 COPY pyproject.toml ./
 COPY src/ ./src/
 
-# Install MCP and lightweight dependencies
-RUN pip install --no-cache-dir \
+# Install dependencies using prebuilt wheels only (fastest, most reliable)
+RUN pip install --no-cache-dir --only-binary=all \
     mcp \
     aiohttp \
     websockets \
     pydantic \
     typer \
     rich \
-    loguru
+    loguru \
+    numpy \
+    matplotlib
 
-# Install the application
-RUN pip install --no-cache-dir -e .
+# Try to install scientific packages with prebuilt wheels only
+RUN pip install --no-cache-dir --only-binary=all scipy || echo "Scipy wheel not available"
+RUN pip install --no-cache-dir --only-binary=all qutip || echo "QuTiP wheel not available"
+
+# Install the application without dependencies
+RUN pip install --no-cache-dir -e . --no-deps
 
 # Copy configuration
-COPY config/ ./config/ 
-
-# Create config directory and copy default config
+COPY config/ ./config/
 RUN mkdir -p /root/.config/psianimator-mcp
 COPY config/default_config.json /root/.config/psianimator-mcp/config.json
 
-# Set environment variables
+# Environment
 ENV PYTHONPATH=/app/src \
     PSIANIMATOR_CONFIG=/root/.config/psianimator-mcp/config.json \
     PYTHONUNBUFFERED=1
 
-# Expose port
 EXPOSE 3000
 
-# Simple health check
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+# Health check
+HEALTHCHECK --interval=30s --timeout=5s --retries=2 \
     CMD python -c "import psianimator_mcp" || exit 1
 
 # Run server

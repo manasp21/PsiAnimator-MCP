@@ -10,9 +10,9 @@ metadata:
   version: "0.1.0"
   
 spec:
-  # Build configuration - ultra-fast deployment
+  # Build configuration
   build:
-    dockerfile: "./Dockerfile.fast"
+    dockerfile: "./Dockerfile"
     context: "."
 
   # Runtime configuration
