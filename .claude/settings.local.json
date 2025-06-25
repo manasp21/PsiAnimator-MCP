@@ -6,7 +6,10 @@
       "Bash(chmod:*)",
       "Bash(gh repo view:*)",
       "WebFetch(domain:github.com)",
-      "Bash(touch:*)"
+      "Bash(touch:*)",
+      "Bash(python:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": []
   }
