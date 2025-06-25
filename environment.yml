@@ -1,0 +1,24 @@
+name: psianimator-mcp
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  # Python
+  - python=3.11
+  
+  # Scientific computing (prebuilt from conda-forge)
+  - numpy>=1.24.0
+  - scipy>=1.11.0
+  - matplotlib>=3.7.0
+  - qutip>=4.7.0
+  
+  # MCP and utilities (via pip since not available in conda)
+  - pip
+  - pip:
+    - mcp>=1.0.0
+    - aiohttp>=3.8.0
+    - websockets>=11.0.0
+    - pydantic>=2.0.0
+    - typer>=0.9.0
+    - rich>=13.0.0
+    - loguru>=0.7.0

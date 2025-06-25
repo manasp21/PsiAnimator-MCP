@@ -1,0 +1,56 @@
+# Lightweight Dockerfile for PsiAnimator-MCP
+# Uses conda-forge for prebuilt scientific packages
+
+FROM mambaorg/micromamba:1.5-slim
+
+# Switch to root to install system packages
+USER root
+
+# Install minimal system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Switch back to micromamba user
+USER $MAMBA_USER
+
+# Set working directory
+WORKDIR /app
+
+# Copy environment file for conda
+COPY --chown=$MAMBA_USER:$MAMBA_USER environment.yml /tmp/environment.yml
+
+# Install dependencies using micromamba (much faster for scientific packages)
+RUN micromamba install -y -n base -f /tmp/environment.yml && \
+    micromamba clean --all --yes
+
+# Activate the environment
+ARG MAMBA_DOCKERFILE_ACTIVATE=1
+
+# Copy project files
+COPY --chown=$MAMBA_USER:$MAMBA_USER . /app/
+
+# Install the application
+RUN pip install --no-cache-dir -e . --no-deps
+
+# Create config directory
+RUN mkdir -p /home/$MAMBA_USER/.config/psianimator-mcp
+
+# Copy default configuration
+COPY --chown=$MAMBA_USER:$MAMBA_USER config/default_config.json /home/$MAMBA_USER/.config/psianimator-mcp/config.json
+
+# Set environment variables
+ENV PYTHONPATH=/app/src \
+    PSIANIMATOR_CONFIG=/home/$MAMBA_USER/.config/psianimator-mcp/config.json \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+# Expose port
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD python -c "import psianimator_mcp; print('Health check passed')" || exit 1
+
+# Default command
+CMD ["python", "-m", "psianimator_mcp.cli", "serve"]
