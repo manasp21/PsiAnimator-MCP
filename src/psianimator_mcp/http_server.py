@@ -447,22 +447,26 @@ class MCPHTTPHandler(BaseHTTPRequestHandler):
             }
     
     def _check_quantum_available(self) -> bool:
-        """Check if quantum dependencies are available"""
-        try:
-            import numpy
-            import scipy
-            import qutip
-            return True
-        except ImportError:
-            return False
+        """Check if quantum dependencies are available - cached"""
+        if not hasattr(self, '_quantum_available_cache'):
+            try:
+                import numpy
+                import scipy  
+                import qutip
+                self._quantum_available_cache = True
+            except ImportError:
+                self._quantum_available_cache = False
+        return self._quantum_available_cache
     
     def _check_animation_available(self) -> bool:
-        """Check if animation dependencies are available"""
-        try:
-            import manim
-            return True
-        except ImportError:
-            return False
+        """Check if animation dependencies are available - cached"""
+        if not hasattr(self, '_animation_available_cache'):
+            try:
+                import manim
+                self._animation_available_cache = True
+            except ImportError:
+                self._animation_available_cache = False
+        return self._animation_available_cache
 
 def main():
     """Main entry point for HTTP server"""

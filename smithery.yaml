@@ -9,7 +9,7 @@ startCommand:
   type: "http"
   port: 8000
   command: "python"
-  args: ["-m", "psianimator_mcp.http_server"]
+  args: ["-m", "psianimator_mcp.http_server_ultra_fast"]
 
 # Resource configuration
 resources:

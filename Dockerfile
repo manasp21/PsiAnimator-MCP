@@ -60,5 +60,5 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
-# Run HTTP server (matches smithery.yaml exactly)
-CMD ["python", "-m", "psianimator_mcp.http_server"]
+# Run ultra-fast HTTP server (no imports during tool scanning)
+CMD ["python", "-m", "psianimator_mcp.http_server_ultra_fast"]
