@@ -1,48 +1,64 @@
-# Optimized Dockerfile for Smithery deployment
-# Fast, reliable build with prebuilt wheels only
+# Production Dockerfile for PsiAnimator-MCP on Smithery
+# Full scientific stack with optimized build
 
 FROM python:3.11-slim
 
 WORKDIR /app
 
+# Install system dependencies for scientific computing
+RUN apt-get update && apt-get install -y \
+    curl \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
 # Copy project files
 COPY pyproject.toml ./
 COPY src/ ./src/
 
-# Install dependencies using prebuilt wheels only (fastest, most reliable)
-RUN pip install --no-cache-dir --only-binary=all \
+# Install core dependencies first
+RUN pip install --no-cache-dir --upgrade pip
+
+# Install MCP and utility dependencies
+RUN pip install --no-cache-dir \
     mcp \
     aiohttp \
     websockets \
     pydantic \
     typer \
     rich \
-    loguru \
+    loguru
+
+# Install scientific packages with prebuilt wheels
+RUN pip install --no-cache-dir --only-binary=all \
     numpy \
+    scipy \
+    matplotlib \
+    qutip || \
+    pip install --no-cache-dir \
+    numpy \
+    scipy \
     matplotlib
 
-# Try to install scientific packages with prebuilt wheels only
-RUN pip install --no-cache-dir --only-binary=all scipy || echo "Scipy wheel not available"
-RUN pip install --no-cache-dir --only-binary=all qutip || echo "QuTiP wheel not available"
-
-# Install the application without dependencies
-RUN pip install --no-cache-dir -e . --no-deps
+# Install the application
+RUN pip install --no-cache-dir -e .
 
 # Copy configuration
 COPY config/ ./config/
 RUN mkdir -p /root/.config/psianimator-mcp
 COPY config/default_config.json /root/.config/psianimator-mcp/config.json
 
-# Environment
+# Environment variables
 ENV PYTHONPATH=/app/src \
     PSIANIMATOR_CONFIG=/root/.config/psianimator-mcp/config.json \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    PORT=8000
 
-EXPOSE 3000
+# Expose port for HTTP server
+EXPOSE 8000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=5s --retries=2 \
-    CMD python -c "import psianimator_mcp" || exit 1
+# Health check for HTTP server
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
 
-# Run server
-CMD ["python", "-m", "psianimator_mcp.cli", "serve"]
+# Run HTTP server (matches smithery.yaml exactly)
+CMD ["python", "-m", "psianimator_mcp.http_server"]

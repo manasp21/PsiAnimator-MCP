@@ -1,47 +1,27 @@
-# Smithery deployment configuration for PsiAnimator-MCP
-# Simplified for reliable cloud deployment
+version: 1
+runtime: "container"
 
-apiVersion: v1
-kind: Service
+build:
+  dockerfile: "Dockerfile"
+  dockerBuildPath: "."
 
-metadata:
-  name: psianimator-mcp
-  description: "Quantum Physics Simulation and Animation MCP Server"
-  version: "0.1.0"
-  
-spec:
-  # Build configuration
-  build:
-    dockerfile: "./Dockerfile"
-    context: "."
+startCommand:
+  type: "http"
+  port: 8000
+  command: "python"
+  args: ["-m", "psianimator_mcp.http_server"]
 
-  # Runtime configuration
-  runtime:
-    # Resource requirements
-    resources:
-      requests:
-        memory: "256Mi"
-        cpu: "100m"
-      limits:
-        memory: "1Gi"
-        cpu: "500m"
-    
-    # Environment variables
-    env:
-      - name: "PSIANIMATOR_TRANSPORT"
-        value: "stdio"
-      - name: "PYTHONUNBUFFERED"
-        value: "1"
-    
-    # Port configuration
-    ports:
-      - name: "websocket"
-        port: 3000
-        
-  # Service configuration
-  service:
-    type: "Server"
-    
-  # Simple deployment
-  deployment:
-    replicas: 1
+# Resource configuration
+resources:
+  requests:
+    memory: "512Mi"
+    cpu: "250m"
+  limits:
+    memory: "2Gi"
+    cpu: "1000m"
+
+# Environment variables
+env:
+  PORT: "8000"
+  PYTHONUNBUFFERED: "1"
+  PSIANIMATOR_TRANSPORT: "http"
