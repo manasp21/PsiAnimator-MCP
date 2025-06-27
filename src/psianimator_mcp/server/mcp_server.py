@@ -29,14 +29,23 @@ from mcp.types import (
 from .config import MCPConfig
 from .exceptions import QuantumMCPError, ValidationError, ConfigurationError
 
-# Core tools (always available)
-from ..tools import (
-    create_quantum_state,
-    evolve_quantum_system,
-    measure_observable,
-    quantum_gate_sequence,
-    calculate_entanglement
-)
+# Core quantum tools (only if scientific packages available)
+try:
+    from ..tools import (
+        create_quantum_state,
+        evolve_quantum_system,
+        measure_observable,
+        quantum_gate_sequence,
+        calculate_entanglement
+    )
+    _QUANTUM_TOOLS_AVAILABLE = True
+except ImportError:
+    create_quantum_state = None
+    evolve_quantum_system = None
+    measure_observable = None
+    quantum_gate_sequence = None
+    calculate_entanglement = None
+    _QUANTUM_TOOLS_AVAILABLE = False
 
 # Check if animation functionality is available
 try:

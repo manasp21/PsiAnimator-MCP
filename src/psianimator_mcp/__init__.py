@@ -14,14 +14,29 @@ __email__ = "contact@psianimator.dev"
 
 # Core imports (always available)
 from .server import MCPServer
-from .quantum import QuantumStateManager, QuantumOperations, QuantumSystems
-from .tools import (
-    create_quantum_state,
-    evolve_quantum_system, 
-    measure_observable,
-    quantum_gate_sequence,
-    calculate_entanglement
-)
+
+# Optional quantum imports (only if scientific packages available)
+try:
+    from .quantum import QuantumStateManager, QuantumOperations, QuantumSystems
+    from .tools import (
+        create_quantum_state,
+        evolve_quantum_system, 
+        measure_observable,
+        quantum_gate_sequence,
+        calculate_entanglement
+    )
+    _QUANTUM_AVAILABLE = True
+except ImportError:
+    # Scientific dependencies not available
+    QuantumStateManager = None
+    QuantumOperations = None
+    QuantumSystems = None
+    create_quantum_state = None
+    evolve_quantum_system = None
+    measure_observable = None
+    quantum_gate_sequence = None
+    calculate_entanglement = None
+    _QUANTUM_AVAILABLE = False
 
 # Optional animation imports (only if manim is available)
 try:
@@ -39,15 +54,20 @@ except ImportError:
 # Core exports (always available)
 __all__ = [
     "MCPServer",
-    "QuantumStateManager", 
-    "QuantumOperations",
-    "QuantumSystems",
-    "create_quantum_state",
-    "evolve_quantum_system",
-    "measure_observable", 
-    "quantum_gate_sequence",
-    "calculate_entanglement",
 ]
+
+# Add quantum exports if available
+if _QUANTUM_AVAILABLE:
+    __all__.extend([
+        "QuantumStateManager", 
+        "QuantumOperations",
+        "QuantumSystems",
+        "create_quantum_state",
+        "evolve_quantum_system",
+        "measure_observable", 
+        "quantum_gate_sequence",
+        "calculate_entanglement",
+    ])
 
 # Add animation exports if available
 if _ANIMATION_AVAILABLE:
@@ -58,9 +78,13 @@ if _ANIMATION_AVAILABLE:
         "animate_quantum_process",
     ])
 
-# Add utility to check animation availability
-__all__.append("is_animation_available")
+# Add utility functions
+__all__.extend(["is_animation_available", "is_quantum_available"])
 
 def is_animation_available() -> bool:
     """Check if animation functionality (manim) is available."""
     return _ANIMATION_AVAILABLE
+
+def is_quantum_available() -> bool:
+    """Check if quantum functionality (numpy, qutip) is available."""
+    return _QUANTUM_AVAILABLE
