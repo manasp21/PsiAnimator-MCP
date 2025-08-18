@@ -35,7 +35,7 @@ jobs:
       python-version: ${{ steps.detect.outputs.python-version }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -87,7 +87,7 @@ jobs:
         python-version: ['3.10', '3.11', '3.12', '3.13']
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
@@ -283,7 +283,7 @@ jobs:
         shell: bash
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -348,7 +348,7 @@ jobs:
       build-success: ${{ steps.check-artifacts.outputs.build-success }}
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -436,7 +436,7 @@ jobs:
           echo "  - has-artifacts: ${{ needs.build.outputs.has-artifacts }}"
           echo "  - build-success: ${{ needs.build.outputs.build-success }}"
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -603,7 +603,7 @@ jobs:
         shell: bash
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         fetch-depth: 0
     
