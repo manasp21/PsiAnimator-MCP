@@ -325,7 +325,7 @@ jobs:
           safety check || echo "Safety check completed with warnings"
 
       - name: Upload security artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         if: always()
         with:
           name: security-reports
@@ -406,7 +406,7 @@ jobs:
         fi
     
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       if: always()
       with:
         name: dist
