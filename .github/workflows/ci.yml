@@ -452,7 +452,7 @@ jobs:
           python -m pip install -e ".[dev,animation]" || python -m pip install -e .
 
       - name: Download build artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: dist
           path: ./dist/
@@ -539,7 +539,7 @@ jobs:
         echo "Has artifacts: ${{ needs.build.outputs.has-artifacts }}"
     
     - name: Download artifacts
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v6
       with:
         name: dist
         path: dist/
@@ -580,7 +580,7 @@ jobs:
         echo "Has artifacts: ${{ needs.build.outputs.has-artifacts }}"
     
     - name: Download artifacts
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v6
       with:
         name: dist
         path: dist/
